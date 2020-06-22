@@ -1,0 +1,78 @@
+---
+title: "Rap Artists Rankings"
+date: "`r Sys.Date()`"
+author: "Laura, Katja, Katharina"
+output:
+  rmdformats::material:
+    highlight: kate
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE}
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print="75")
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,
+	cache = TRUE,
+	comment = NA,
+	prompt = FALSE,
+	tidy = TRUE
+)
+opts_knit$set(width=75)
+
+```
+
+```{r}
+library(tidyverse)
+
+polls <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-14/polls.csv')
+rankings <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-14/rankings.csv')
+
+```
+
+# Einleitung
+
+Earlier this year, BBC Music asked more than 100 critics, artists, and other music industry folks from 15 countries for their five favorite hip-hop tracks. Then they broke down the results of the poll into one definitive list. But BBC Music didn’t just publish a best-of list, they also published the complete poll results and a description of the simple algorithm they ranked the songs with. - Simon Jockers
+
+We awarded 10 points for first ranked track, eight points for second ranked track, and so on down to two points for fifth place. The song with the most points won. We split ties by the total number of votes: songs with more votes ranked higher. Any ties remaining after this were split by first place votes, followed by second place votes and so on: songs with more critics placing them at higher up the lists up ranked higher. -- BBC Music
+
+Data Source: [TidyTuesday](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-04-14/readme.md)
+
+
+# Visualisierungen
+
+Alle Künstler, die mehr als 50 Punkte erhalten haben sind männlich. 
+
+```{r}
+rankings %>% 
+  ggplot(aes(year, points, color = gender)) +
+  geom_point() +
+  geom_text(aes(label=ifelse(points>50,as.character(artist),'')), size = 2.5, vjust = "inward", hjust = "inward") +
+   scale_color_manual(labels = c("Weiblich", "Männlich", "Gemischt"), values = c("#F100DC", "#15AB00", "#7B7BF1")) +
+  labs(y = "Punkte der Kritiker", x = "Jahr", color = "Geschlecht")
+  
+```
+
+
+Im Jahr 2000 war B.O.B. der am besten bewertete Raptitel.
+
+```{r}
+year2000 <- rankings %>% filter( year == 2000)
+
+year2000 %>%
+  arrange(desc(n)) %>%
+  group_by(title, points) %>%
+  count() %>%
+  top_n(10) %>%
+  ggplot() +
+  aes(x = reorder(factor(title), points), y = points, fill = title) + 
+  geom_col(fill = c("#7B7BF1")) + 
+  coord_flip() +
+  theme(legend.position = "none") +
+  labs(x = "Titel", y = "Punkte der Kritiker")
+```
